@@ -14,9 +14,9 @@ async function loadModels() {
   }
 }
 
-function test(label, fn) {
+async function test(label, fn) {
   try {
-    fn();
+    await fn();
     console.log(`✅ ${label}`);
     pass++;
   } catch (err) {
@@ -25,15 +25,24 @@ function test(label, fn) {
   }
 }
 
-function expectError(doc, path) {
-  const err = doc.validateSync();
+async function getValidationError(doc) {
+  try {
+    await doc.validate();
+    return null;
+  } catch (err) {
+    return err;
+  }
+}
+
+async function expectError(doc, path) {
+  const err = await getValidationError(doc);
   if (!err || !err.errors[path]) {
     throw new Error(`se esperaba un error de validación en '${path}', pero no hubo ninguno`);
   }
 }
 
-function expectNoError(doc, path) {
-  const err = doc.validateSync();
+async function expectNoError(doc, path) {
+  const err = await getValidationError(doc);
   if (err && err.errors[path]) {
     throw new Error(`no se esperaba un error de validación en '${path}', pero se obtuvo: ${err.errors[path].message}`);
   }
@@ -45,69 +54,69 @@ console.log('\nLección 05: Esquemas y modelos\n');
 
 await loadModels();
 
-test('Review — el modelo está definido', () => {
+await test('Review — el modelo está definido', () => {
   if (typeof Review !== 'function') throw new Error('El modelo Review exportado no es válido');
 });
 
-test('Review — text es obligatorio', () => {
-  expectError(new Review({ rating: 4 }), 'text');
+await test('Review — text es obligatorio', async () => {
+  await expectError(new Review({ rating: 4 }), 'text');
 });
 
-test('Review — text exige una longitud mínima de 5', () => {
-  expectError(new Review({ text: 'hi', rating: 4 }), 'text');
+await test('Review — text exige una longitud mínima de 5', async () => {
+  await expectError(new Review({ text: 'hi', rating: 4 }), 'text');
 });
 
-test('Review — text exige una longitud máxima de 500', () => {
-  expectError(new Review({ text: 'x'.repeat(501), rating: 4 }), 'text');
+await test('Review — text exige una longitud máxima de 500', async () => {
+  await expectError(new Review({ text: 'x'.repeat(501), rating: 4 }), 'text');
 });
 
-test('Review — rating es obligatorio', () => {
-  expectError(new Review({ text: 'Great book!' }), 'rating');
+await test('Review — rating es obligatorio', async () => {
+  await expectError(new Review({ text: 'Great book!' }), 'rating');
 });
 
-test('Review — un documento válido pasa la validación', () => {
-  expectNoError(new Review({ text: 'Great book!', rating: 5 }), 'text');
-  expectNoError(new Review({ text: 'Great book!', rating: 5 }), 'rating');
+await test('Review — un documento válido pasa la validación', async () => {
+  await expectNoError(new Review({ text: 'Great book!', rating: 5 }), 'text');
+  await expectNoError(new Review({ text: 'Great book!', rating: 5 }), 'rating');
 });
 
 // ── Modelo Book ────────────────────────────────────────────────────────────────
-test('Book — el modelo está definido', () => {
+await test('Book — el modelo está definido', () => {
   if (typeof Book !== 'function') throw new Error('El modelo Book exportado no es válido');
 });
 
-test('Book — title es obligatorio', () => {
-  expectError(new Book({ genre: 'fiction' }), 'title');
+await test('Book — title es obligatorio', async () => {
+  await expectError(new Book({ genre: 'fiction' }), 'title');
 });
 
-test('Book — title exige una longitud mínima de 2', () => {
-  expectError(new Book({ title: 'X', genre: 'fiction' }), 'title');
+await test('Book — title exige una longitud mínima de 2', async () => {
+  await expectError(new Book({ title: 'X', genre: 'fiction' }), 'title');
 });
 
-test('Book — title exige una longitud máxima de 100', () => {
-  expectError(new Book({ title: 'x'.repeat(101), genre: 'fiction' }), 'title');
+await test('Book — title exige una longitud máxima de 100', async () => {
+  await expectError(new Book({ title: 'x'.repeat(101), genre: 'fiction' }), 'title');
 });
 
-test('Book — genre es obligatorio', () => {
-  expectError(new Book({ title: 'Dune' }), 'genre');
+await test('Book — genre es obligatorio', async () => {
+  await expectError(new Book({ title: 'Dune' }), 'genre');
 });
 
-test('Book — genre rechaza valores fuera del enum', () => {
-  expectError(new Book({ title: 'Dune', genre: 'fantasy' }), 'genre');
+await test('Book — genre rechaza valores fuera del enum', async () => {
+  await expectError(new Book({ title: 'Dune', genre: 'fantasy' }), 'genre');
 });
 
-test('Book — genre acepta todos los valores válidos del enum', () => {
+await test('Book — genre acepta todos los valores válidos del enum', async () => {
   for (const g of ['fiction', 'non-fiction', 'biography', 'science', 'history']) {
-    expectNoError(new Book({ title: 'Dune', genre: g }), 'genre');
+    await expectNoError(new Book({ title: 'Dune', genre: g }), 'genre');
   }
 });
 
-test('Book — year es opcional', () => {
-  expectNoError(new Book({ title: 'Dune', genre: 'fiction' }), 'year');
+await test('Book — year es opcional', async () => {
+  await expectNoError(new Book({ title: 'Dune', genre: 'fiction' }), 'year');
 });
 
-test('Book — tags es un arreglo', () => {
+await test('Book — tags es un arreglo', async () => {
   const doc = new Book({ title: 'Dune', genre: 'fiction', tags: ['scifi', 'epic'] });
-  const err = doc.validateSync();
+  const err = await getValidationError(doc);
   if (err) throw new Error(`error de validación inesperado: ${err.message}`);
   if (!Array.isArray(doc.tags)) throw new Error('tags no es un arreglo');
 });
