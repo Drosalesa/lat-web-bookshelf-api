@@ -9,7 +9,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -22,5 +23,8 @@
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.2"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true
   }
 }

@@ -5,8 +5,8 @@ let fail = 0;
 
 async function loadModels() {
   try {
-    const b = await import('../src/models/book.js');
-    const r = await import('../src/models/review.js');
+    const b = await import('../src/models/book.ts');
+    const r = await import('../src/models/review.ts');
     Book = b.default;
     Review = r.default;
   } catch (error) {
