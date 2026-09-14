@@ -13,7 +13,11 @@ const bookSchema = new mongoose.Schema({
     enum: ["fiction", "non-fiction", "biography", "science", "history"],
   },
   year: {type: Number},
-  tags: [{type: String, minlength: 2, maxlength: 20}]
+  tags: [{type: String, minlength: 2, maxlength: 20}],
+  reviews: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Review"
+  }]
 });
 
 const Book = mongoose.model("Book", bookSchema);
